@@ -1,0 +1,15 @@
+{
+  "name": "my-first-ai-coding-harness",
+  "version": "1.0.0",
+  "description": "A simple AI coding harness for educational purposes",
+  "license": "MIT",
+  "author": "Michael Haar",
+  "type": "commonjs",
+  "main": "agent.ts",
+  "scripts": {
+    "dev": "node agent.ts"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
