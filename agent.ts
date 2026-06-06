@@ -1,5 +1,6 @@
 import * as readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
+import { callLLM } from './llm.ts';
 
 // ─── Main REPL ───────────────────────────────────────────────────────────────
 async function main() {
@@ -9,7 +10,8 @@ async function main() {
 
   while (true) {
     const userInput = await rl.question('User: ');
-    console.log(`Agent: ${userInput}`);
+    const response = await callLLM(userInput);
+    console.log(`Agent: ${response}`);
   }
 }
 
