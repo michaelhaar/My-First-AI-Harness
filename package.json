@@ -4,12 +4,13 @@
   "description": "A simple AI coding harness for educational purposes",
   "license": "MIT",
   "author": "Michael Haar",
-  "type": "commonjs",
+  "type": "module",
   "main": "agent.ts",
   "scripts": {
     "dev": "node agent.ts"
   },
   "devDependencies": {
+    "@types/node": "^24.13.1",
     "typescript": "^6.0.3"
   }
 }
