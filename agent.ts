@@ -7,10 +7,17 @@ async function main() {
   console.log('Welcome to our AI Coding Harness REPL!');
 
   const rl = readline.createInterface({ input: stdin, output: stdout });
+  let userInput: string;
 
   while (true) {
-    const userInput = await rl.question('User: ');
-    const response = await callLLM(userInput);
+    try {
+      userInput = await rl.question('You: ');
+    } catch {
+      console.log('\nGoodbye!');
+      rl.close();
+      break;
+    }
+    await callLLM(userInput);
   }
 }
 
