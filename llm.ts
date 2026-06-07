@@ -1,6 +1,7 @@
 import { OpenAI } from 'openai';
 import { runToolByName, tools } from './tools/base.ts';
 import { config } from './config.ts';
+import * as ui from './ui.ts';
 
 const client = new OpenAI({
   baseURL: config.llm.baseUrl,
@@ -8,7 +9,7 @@ const client = new OpenAI({
 });
 
 export async function callLLM(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]): Promise<string> {
-  process.stdout.write('Agent: thinking...');
+  ui.thinking();
 
   while (true) {
     const { content, toolCalls, didStartResponse } = await streamCompletion(messages);
@@ -50,18 +51,27 @@ async function streamCompletion(messages: OpenAI.Chat.Completions.ChatCompletion
 
   let content = '';
   let didStartResponse = false;
+  let didStartReasoning = false;
   const toolCalls: PendingToolCall[] = [];
 
   for await (const chunk of stream) {
     const delta = chunk.choices[0]?.delta;
     if (!delta) continue;
 
+    const reasoningContent = (delta as Record<string, unknown>).reasoning_content as string | undefined;
+    if (reasoningContent && config.ui.showReasoning) {
+      if (!didStartReasoning) {
+        ui.startReasoning();
+        didStartReasoning = true;
+      }
+      process.stdout.write(reasoningContent.replace(/\n/g, ' '));
+    }
+
     if (delta.content) {
       if (!didStartResponse) {
         if (!delta.content.trim()) continue;
-        process.stdout.clearLine?.(0);
-        process.stdout.cursorTo?.(0);
-        process.stdout.write('Agent: ');
+        if (didStartReasoning) process.stdout.write('\n');
+        ui.startAgentResponse();
         didStartResponse = true;
       }
       process.stdout.write(delta.content);
@@ -96,23 +106,33 @@ async function executeToolCalls(
   for (let i = 0; i < toolCalls.length; i++) {
     const tc = toolCalls[i]!;
     const name = tc.function.name;
-    const args = JSON.parse(tc.function.arguments || '{}') as Record<string, unknown>;
 
     if (i === 0) {
       if (didStartResponse) {
         const separator = content.endsWith('\n') ? '' : '\n';
         process.stdout.write(separator);
       } else {
-        process.stdout.write('\r\x1b[2K');
+        ui.clearLine();
       }
     }
 
-    process.stdout.write(`[tool] ${name}(${JSON.stringify(args)})\n`);
+    let args: Record<string, unknown>;
+    try {
+      args = JSON.parse(tc.function.arguments || '{}') as Record<string, unknown>;
+    } catch (error) {
+      args = { arguments: tc.function.arguments, error: 'invalid JSON' };
+      const startedAt = ui.toolStart(name, args);
+      ui.toolError(name, startedAt, error);
+      results.push({ role: 'tool', tool_call_id: tc.id, content: `Error: invalid tool arguments for ${name}` });
+      continue;
+    }
 
+    const startedAt = ui.toolStart(name, args);
     const result = await runToolByName(name, args);
+    ui.toolEnd(name, startedAt);
     results.push({ role: 'tool', tool_call_id: tc.id, content: result });
   }
 
-  process.stdout.write('Agent: thinking...');
+  ui.thinking();
   return results;
 }

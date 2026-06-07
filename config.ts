@@ -6,6 +6,12 @@ export const config = {
     apiKey: process.env.LLM_API_KEY ?? '12345',
     model: process.env.LLM_MODEL ?? 'Qwen3.6-35B-A3B-oQ4-fp16-mtp',
   },
+  ui: {
+    color: process.env.NO_COLOR == null,
+    showReasoning: process.env.SHOW_REASONING === '1',
+    debugTools: process.env.DEBUG_TOOLS === '1',
+    maxToolPreviewChars: Number(process.env.MAX_TOOL_PREVIEW_CHARS ?? 300),
+  },
 };
 
 export const systemMessage: OpenAI.Chat.Completions.ChatCompletionMessageParam = {
