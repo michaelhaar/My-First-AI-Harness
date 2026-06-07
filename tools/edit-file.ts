@@ -17,7 +17,7 @@ export const editFileTool: Tool = {
           oldText: { type: 'string', description: 'Exact text to find and replace (must match exactly)' },
           newText: { type: 'string', description: 'New text to replace the old text with' },
         },
-        required: ['path', 'new_content', 'start_line', 'end_line'],
+        required: ['path', 'oldText', 'newText'],
       },
     },
   },
