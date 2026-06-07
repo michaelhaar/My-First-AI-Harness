@@ -1,6 +1,8 @@
 import * as readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { callLLM } from './llm.ts';
+import type OpenAI from 'openai';
+import { systemMessage } from './config.ts';
 
 // ─── Main REPL ───────────────────────────────────────────────────────────────
 async function main() {
@@ -8,6 +10,7 @@ async function main() {
 
   const rl = readline.createInterface({ input: stdin, output: stdout });
   let userInput: string;
+  const history: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [systemMessage];
 
   while (true) {
     try {
@@ -17,7 +20,9 @@ async function main() {
       rl.close();
       break;
     }
-    await callLLM(userInput);
+
+    history.push({ role: 'user', content: userInput });
+    await callLLM(history);
   }
 }
 
