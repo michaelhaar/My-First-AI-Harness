@@ -11,7 +11,6 @@ async function main() {
   while (true) {
     const userInput = await rl.question('User: ');
     const response = await callLLM(userInput);
-    console.log(`Agent: ${response}`);
   }
 }
 

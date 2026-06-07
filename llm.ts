@@ -13,12 +13,20 @@ export async function callLLM(userInput: string): Promise<string> {
     },
   ];
 
-  const response = await client.chat.completions.create({
+  const stream = await client.chat.completions.create({
     model: 'Qwen3.6-35B-A3B-oQ4-fp16-mtp',
     messages,
+    stream: true,
   });
 
-  const choice = response.choices[0];
-  const msg = choice?.message;
-  return msg?.content ?? '(no response)';
+  let result = '';
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta?.content;
+    if (delta) {
+      process.stdout.write(delta);
+      result += delta;
+    }
+  }
+  console.log('\n');
+  return result;
 }
